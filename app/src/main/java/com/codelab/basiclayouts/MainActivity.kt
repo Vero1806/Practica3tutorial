@@ -81,7 +81,7 @@ fun SearchBar(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp)
-
+//Esto es un comentario de prueba
     )
 }
 
