@@ -22,7 +22,11 @@ import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -31,12 +35,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.magnifier
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -45,6 +57,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -81,22 +94,21 @@ fun SearchBar(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp)
-//Esto es un comentario de prueba
     )
 }
 
 // Step: Align your body - Alignment
 @Composable
 fun AlignYourBodyElement(
-   // @DrawableRes drawable: Int, //parametros para crear que sea dinámico INVESTIGAR
-    //@StringRes text: Int, //pasamos objetos de tipo imagen y otra de tipo texto.
-    modifier: Modifier = Modifier
+   @DrawableRes drawable: Int, //parametros para crear que sea dinámico INVESTIGAR
+   @StringRes text: Int, //pasamos objetos de tipo imagen y otra de tipo texto.
+    modifier: Modifier = Modifier //parametro opcional, no tenemos porque pasarlo. Por eso no lleva @
 ) {
     // Implement composable here
     Column(
         horizontalAlignment = Alignment.CenterHorizontally, //Alinea los componentes de la columna al centro de ella
     ){
-        Image(painter = painterResource(R.drawable.ab1_inversions),
+        Image(painter = painterResource(drawable),
             contentDescription = null,
             contentScale = ContentScale.Crop, // .Fit o FillBounds(mete toda la foto en el espacio que le des) modifica el cacho del recorte
             modifier = Modifier
@@ -104,7 +116,7 @@ fun AlignYourBodyElement(
                 .clip(CircleShape) // circulo de la imagen
         )
         Text(
-            text = stringResource(R.string.ab1_inversions), // texto dado en un xml con el archivo
+            text = stringResource(text), // texto dado en un xml con el archivo
             modifier = Modifier.paddingFromBaseline(top = 24.dp, bottom = 8.dp), //separación entre la imagen y el texto (top) y del texto con el espacio de abajo
             style = MaterialTheme.typography.bodyMedium
         )
@@ -115,10 +127,38 @@ fun AlignYourBodyElement(
 // Step: Favorite collection card - Material Surface
 @Composable
 fun FavoriteCollectionCard(
+    @DrawableRes drawable: Int,
+    @StringRes text: Int,
     modifier: Modifier = Modifier
 ) {
     // Implement composable here
+    Surface (
+        shape = MaterialTheme.shapes.medium, //redondea las esquinas
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        modifier = modifier
+    ){
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+                modifier = modifier
+            .width (255.dp)
+    ){
+
+        Image(
+            painter = painterResource(drawable),
+            contentDescription = null,
+            contentScale = ContentScale.Crop, //Lo mismo que en el ejemplo del yoga
+            modifier = Modifier
+                .size (80.dp)
+            )
+        Text(
+            text = stringResource(text),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(horizontal = 16.dp)
+            )
+    }
+    }
 }
+
 
 // Step: Align your body row - Arrangements
 @Composable
@@ -126,6 +166,16 @@ fun AlignYourBodyRow(
     modifier: Modifier = Modifier
 ) {
     // Implement composable here
+    LazyRow( // Lo mismo del chat
+        horizontalArrangement = Arrangement.spacedBy(8.dp), //crea espacio entre los elementos esto es spaceBy. Separa a los hijos
+        contentPadding = PaddingValues(horizontal = 16.dp), // mantienen que la imagen no se corte al recorrerlo en la app. Si no está sale 4 imagenes y un cachito de la 5 en el inicio
+        modifier = Modifier
+            //.padding(horizontal = 8.dp) //este pading no se mantiene dinamico con el movimiento. En este caso funciona igual pero no es la manera
+    ){
+        items (alignYourBodyData){// Llama a objetos por cada vez que ejecuta la funcióm
+            item -> AlignYourBodyElement(item.drawable, item.text )
+        }
+    }
 }
 
 // Step: Favorite collections grid - LazyGrid
@@ -133,27 +183,75 @@ fun AlignYourBodyRow(
 fun FavoriteCollectionsGrid(
     modifier: Modifier = Modifier
 ) {
+    LazyHorizontalGrid(   //asignacion más atractiva pero igual que el LazyRow grid se lo toma celda
+        rows = GridCells.Fixed(2), //número de celdas
+        contentPadding = PaddingValues(horizontal = 16.dp), // no me termina de quedar claro
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = modifier
+            .height(168.dp)  // Altura del conjuto de 2 conjunto en vertical
+    ){
+        items(favoriteCollectionsData){
+            item -> FavoriteCollectionCard(item.drawable, item.text, modifier = modifier. height(80.dp))
+        }
+    }
     // Implement composable here
 }
 
 // Step: Home section - Slot APIs
 @Composable
-fun HomeSection(
-    modifier: Modifier = Modifier
-) {
+fun HomeSection(  //funcion genérica donde se pasa cada una de las variables del column del HomeScreen. esquema para las otras 2 partes
+    @StringRes title:Int,
+    modifier: Modifier = Modifier,
+    content : @Composable () -> Unit
+    ) {
     // Implement composable here
+    Column {
+    Text (stringResource(title),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = modifier
+            .paddingFromBaseline(top = 40.dp, bottom = 16.dp)
+            .padding(horizontal = 16.dp)
+        )
+    content()
+}
+
 }
 
 // Step: Home screen - Scrolling
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier) {
     // Implement composable here
+        Column (modifier
+            .verticalScroll(rememberScrollState())) //recuerda la posicion del scroll para abajo
+    {
+            Spacer(modifier = Modifier.height(16.dp)) // espacio
+            SearchBar(Modifier.padding(horizontal = 16.dp)) // la barra de busqueda
+            HomeSection(title = R.string.align_your_body) { // las pelotas de cuerpos
+                AlignYourBodyRow()
+            }
+            HomeSection(title = R.string.favorite_collections) { // la naturaleza en cuadritos
+                FavoriteCollectionsGrid()
+            }
+            Spacer(modifier.height(16.dp)) //espacio abajo
+        }
+
+
 }
 
 // Step: Bottom navigation - Material
 @Composable
 private fun SootheBottomNavigation(modifier: Modifier = Modifier) {
     // Implement composable here
+    NavegationBarItem(
+        selected = true
+        onClick = { /*TODO*/},
+        icon = {Icon(imagenVector = Icons.Default.Spa, contentDescripcion = null) },
+
+    ){
+
+    }
+
 }
 
 // Step: MySoothe App - Scaffold
@@ -181,12 +279,15 @@ fun MySootheApp() {
 Column {
     SearchBar()
     //Spacer(modifier = Modifier.weight(2f)) // Espacio horizontal entre las funciones
-    AlignYourBodyElement()
+    AlignYourBodyElement(
+        modifier = Modifier.padding(8.dp) ,
+        drawable = R.drawable.ab1_inversions,
+        text = R.string.ab1_inversions)
 }
 
 }
 
-private val alignYourBodyData = listOf(
+private val alignYourBodyData = listOf( // lista del yoga
     R.drawable.ab1_inversions to R.string.ab1_inversions,
     R.drawable.ab2_quick_yoga to R.string.ab2_quick_yoga,
     R.drawable.ab3_stretching to R.string.ab3_stretching,
@@ -220,7 +321,9 @@ fun SearchBarPreview() {
 fun AlignYourBodyElementPreview() {
     MySootheTheme {
         AlignYourBodyElement(
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier.padding(8.dp) ,
+            drawable = R.drawable.ab1_inversions,
+            text = R.string.ab1_inversions
         )
     }
 }
@@ -230,7 +333,9 @@ fun AlignYourBodyElementPreview() {
 fun FavoriteCollectionCardPreview() {
     MySootheTheme {
         FavoriteCollectionCard(
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier.padding(8.dp) ,
+            drawable = R.drawable.fc2_nature_meditations,
+            text = R.string.fc2_nature_meditations,
         )
     }
 }
@@ -250,10 +355,14 @@ fun AlignYourBodyRowPreview() {
 @Preview(showBackground = true, backgroundColor = 0xFFF5F0EE)
 @Composable
 fun HomeSectionPreview() {
-    MySootheTheme { HomeSection() }
+    MySootheTheme {
+        HomeSection(R.string.align_your_body) {
+            AlignYourBodyRow()
+        }
+    }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFF5F0EE)
+@Preview(showBackground = true, backgroundColor = 0xFFF5F0EE,) //heightDp = 180)
 @Composable
 fun ScreenContentPreview() {
     MySootheTheme { HomeScreen() }
