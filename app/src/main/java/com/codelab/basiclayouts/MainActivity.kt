@@ -240,8 +240,8 @@ fun HomeSection(  //funcion genérica donde se pasa cada una de las variables de
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier) {
     // Implement composable here
-        Column (modifier
-            .verticalScroll(rememberScrollState())) //recuerda la posicion del scroll para abajo
+        Column (modifier = modifier
+           .verticalScroll(rememberScrollState())) //IMPORTANTE. recuerda la posicion del scroll para abajo.
     {
             Spacer(modifier = Modifier.height(16.dp)) // espacio
             SearchBar(Modifier.padding(horizontal = 16.dp)) // la barra de busqueda
@@ -251,7 +251,16 @@ fun HomeScreen(modifier: Modifier = Modifier) {
             HomeSection(title = R.string.favorite_collections) { // la naturaleza en cuadritos
                 FavoriteCollectionsGrid()
             }
+
+            HomeSection(title = R.string.align_your_body) { // las pelotas de cuerpos
+            AlignYourBodyRow()
+            }
+
             Spacer(modifier.height(16.dp)) //espacio abajo
+
+            HomeSection(title = R.string.favorite_collections) { // la naturaleza en cuadritos
+            FavoriteCollectionsGrid()
+            }
         }
 
 
@@ -293,6 +302,7 @@ fun MySootheAppPortrait() {
             bottomBar = { SootheBottomNavigation()}
         ){
             padding -> HomeScreen(Modifier.padding(padding))
+
         }
     }
 }
